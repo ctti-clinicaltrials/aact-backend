@@ -1,22 +1,14 @@
 default: &default
-  adapter: postgresql
+  adapter: sqlite3
   encoding: unicode
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  timeout: 5000
 
 
 development:
   <<: *default
-  host: localhost
-  port: 5432
-  database: aact
-  search_path: ctgov, support
+  database: db/development.sqlite3
 
 test:
   <<: *default
-  database: aact_backend_test
-
-production:
-  <<: *default
-  database: aact_backend_production
-  username: aact_backend
-  password: <%= ENV["AACT_BACKEND_DATABASE_PASSWORD"] %>
+  database: db/test.sqlite3
