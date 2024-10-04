@@ -10,7 +10,7 @@ development:
   host: localhost
   port: 5432
   database: aact
-  search_path: ctgov, support
+  search_path: ctgov,ctgov_api,support
 
 test:
   <<: *default
