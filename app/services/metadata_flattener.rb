@@ -1,6 +1,7 @@
 class MetadataFlattener
-  def initialize(metadata)
-    @metadata = metadata
+  def initialize(metadata, version)
+      @metadata = metadata
+      @version = version || "v2"
   end
 
   def flatten
@@ -24,18 +25,20 @@ class MetadataFlattener
       end
     else
       # should be a leaf node
-      flattened_data << {
-        name: node["name"],
-        type: node["type"],
-        piece: node["piece"],
-        source_type: node["sourceType"],
-        synonyms: node["synonyms"],
-        label: node.dig("dedLink", "label"),
-        url: node.dig("dedLink", "url"),
-        section: parent_path[0],
-        module: parent_path[1],
-        path: parent_path + [ node["name"] ]  # Full path to this node
-      }
+      api_field = CtgovApi::Metadata.create(
+          name: node["name"],
+          data_type: node["type"],
+          piece: node["piece"],
+          source_type: node["sourceType"],
+          synonyms: node["synonyms"],
+          label: node.dig("dedLink", "label"),
+          url: node.dig("dedLink", "url"),
+          section: parent_path[0],  # First part of the path is section
+          module: parent_path[1],   # Second part is module
+          path: parent_path + [ node["name"] ],
+          version: @version
+        )
+      flattened_data << api_field
     end
 
     flattened_data
