@@ -25,6 +25,7 @@ class MetadataFlattener
       end
     else
       # should be a leaf node
+      # TODO: insert all at once?
       api_field = CtgovApi::Metadata.create(
           name: node["name"],
           data_type: node["type"],
@@ -35,7 +36,7 @@ class MetadataFlattener
           url: node.dig("dedLink", "url"),
           section: parent_path[0],  # First part of the path is section
           module: parent_path[1],   # Second part is module
-          path: parent_path + [ node["name"] ],
+          path: (parent_path + [ node["name"] ]).join("."),
           version: @version
         )
       flattened_data << api_field

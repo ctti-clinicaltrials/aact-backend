@@ -11,8 +11,7 @@ class CreateCtgovApiMetadataTable < ActiveRecord::Migration[7.2]
       t.string :url
       t.string :section
       t.string :module
-      t.string :path, array: true, default: []
-
+      t.string :path,
       t.timestamps
     end
   end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2024_10_04_010026) do
+ActiveRecord::Schema[7.2].define(version: 2024_10_06_165006) do
   create_schema "ctgov"
   create_schema "ctgov_api"
   create_schema "legacy"
