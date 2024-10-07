@@ -10,5 +10,7 @@ class CreateMapping < ActiveRecord::Migration[7.2]
                   null: true
       t.timestamps
     end
+
+    add_index "ctgov_api.mappings", [ :table_name, :field_name, :api_path ], unique: true
   end
 end

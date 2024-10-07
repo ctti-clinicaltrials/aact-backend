@@ -4,41 +4,60 @@ class DataMappingService
   end
 
   def data_mapping
-    process_mapping(@mapping)
+    # process_mapping(@mapping)
+    all_mappings = process_json(@mapping)
+
+    deduplicated_mappings = all_mappings.uniq { |entry| [ entry[:table_name], entry[:field_name], entry[:api_path] ] }
+
+    # Bulk upsert operation for efficiency
+    CtgovApi::Mapping.upsert_all(deduplicated_mappings, unique_by: [ :table_name, :field_name, :api_path ])
   end
 
-  def process_mapping(mappings, parent_root = nil)
-    mappings.each do |map|
-      parent_root ||= map["root"] # Set the parent root if it's nil
-      root = map["root"] || [] # root is the starting path
 
-      # If there is a flatten attribute, combine it with the root
-      if map["flatten"]
-        root = (root || []) + map["flatten"]
-      end
+  def process_json(mappings, parent_root = nil)
+    all_mappings = [] # aka records in the mapping table
 
-      map["columns"].each do |column|
+    mappings.each do |mapping|
+      root = build_root(parent_root, mapping)
+      # all_mappings += extract_mapping_entries(map, root) # switch to concat for memory efficiency
+
+      # check for mapping without columns
+      mapping["columns"].each do |column|
         full_path_array = build_full_path(root, column["value"])
         api_path = full_path_array.join(".")
 
-        metadata = CtgovApi::Metadata.find_by(path: api_path)
-
-        CtgovApi::Mapping.create(
-          table_name: map["table"],
+        all_mappings << {
+          table_name: mapping["table"],
           field_name: column["name"],
           api_path: api_path,
-          ctgov_api_metadata_id: metadata&.id, # Link to metadata using foreign key
-          active: true
-        )
+          ctgov_api_metadata_id: fetch_metadata_id(api_path),
+          active: true,
+          created_at: Time.now,
+          updated_at: Time.now
+        }
       end
 
-      if map["children"]
-        process_children(map["children"], root)
+      if mapping["children"]
+        all_mappings += process_json(mapping["children"], root)
       end
     end
+    all_mappings
   end
 
   private
+
+  def fetch_metadata_id(api_path)
+    metadata = CtgovApi::Metadata.find_by(path: api_path)
+    metadata&.id
+  end
+
+  def build_root(parent_root, mapping)
+    root = parent_root ? parent_root.dup : []
+    root += mapping["root"] if mapping["root"]
+    # TODO: double check auto adding of flatten
+    root += mapping["flatten"] if mapping["flatten"]
+    root
+  end
 
   def build_full_path(root, value)
     full_path = root ? root.dup : []
@@ -57,33 +76,5 @@ class DataMappingService
     end
 
     full_path
-  end
-
-  def process_children(children, parent_root)
-    children.each do |child|
-      root = parent_root.dup if parent_root
-      root += child["root"] if child["root"]
-      root += child["flatten"] if child["flatten"]
-
-      child["columns"].each do |column|
-        full_path_array = build_full_path(root, column["value"])
-        api_path = full_path_array.join(".")
-
-        metadata = CtgovApi::Metadata.find_by(path: api_path)
-
-        CtgovApi::Mapping.create(
-          table_name: child["table"],
-          field_name: column["name"],
-          api_path: api_path,
-          ctgov_api_metadata_id: metadata&.id, # Link to metadata using foreign key
-          active: true
-        )
-      end
-
-      # Recursively process nested children
-      if child["children"]
-        process_children(child["children"], root)
-      end
-    end
   end
 end
