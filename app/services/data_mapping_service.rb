@@ -4,10 +4,13 @@ class DataMappingService
   end
 
   def data_mapping
-    flattened_data = []
+    process_mapping(@mapping)
+  end
 
-    @mapping.each do |map|
-      root = map["root"] # root is the starting path
+  def process_mapping(mappings, parent_root = nil)
+    mappings.each do |map|
+      parent_root ||= map["root"] # Set the parent root if it's nil
+      root = map["root"] || [] # root is the starting path
 
       # If there is a flatten attribute, combine it with the root
       if map["flatten"]
@@ -15,24 +18,24 @@ class DataMappingService
       end
 
       map["columns"].each do |column|
-        full_path = build_full_path(root, column["value"])
+        full_path_array = build_full_path(root, column["value"])
+        api_path = full_path_array.join(".")
 
-        # Store the table, field, API path, and conversion info if available
-        flattened_data << {
-          table: map["table"],
-          field: column["name"],
-          api_path: full_path,
-          convert_to: column["convert_to"] # You can add nil or empty string if this doesn't exist
-        }
+        metadata = CtgovApi::Metadata.find_by(path: api_path)
+
+        CtgovApi::Mapping.create(
+          table_name: map["table"],
+          field_name: column["name"],
+          api_path: api_path,
+          ctgov_api_metadata_id: metadata&.id, # Link to metadata using foreign key
+          active: true
+        )
       end
 
-      # Recursively process nested mappings if any
       if map["children"]
-        flattened_data += process_children(map["children"], root)
+        process_children(map["children"], root)
       end
     end
-
-    flattened_data
   end
 
   private
@@ -57,34 +60,30 @@ class DataMappingService
   end
 
   def process_children(children, parent_root)
-    flattened_data = []
-
     children.each do |child|
-      root = child["root"] || parent_root # Inherit parent's root if child root is nil
-
-      # Handle the flatten attribute if it exists
-      if child["flatten"]
-        root = (root || []) + child["flatten"]
-      end
+      root = parent_root.dup if parent_root
+      root += child["root"] if child["root"]
+      root += child["flatten"] if child["flatten"]
 
       child["columns"].each do |column|
-        full_path = build_full_path(root, column["value"])
+        full_path_array = build_full_path(root, column["value"])
+        api_path = full_path_array.join(".")
 
-        # Store the table, field, API path, and conversion info if available
-        flattened_data << {
-          table: child["table"],
-          field: column["name"],
-          api_path: full_path,
-          convert_to: column["convert_to"] # You can add nil or empty string if this doesn't exist
-        }
+        metadata = CtgovApi::Metadata.find_by(path: api_path)
+
+        CtgovApi::Mapping.create(
+          table_name: child["table"],
+          field_name: column["name"],
+          api_path: api_path,
+          ctgov_api_metadata_id: metadata&.id, # Link to metadata using foreign key
+          active: true
+        )
       end
 
       # Recursively process nested children
       if child["children"]
-        flattened_data += process_children(child["children"], root)
+        process_children(child["children"], root)
       end
     end
-
-    flattened_data
   end
 end
