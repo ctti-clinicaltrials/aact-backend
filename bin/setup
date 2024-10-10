@@ -2,7 +2,7 @@
 require "fileutils"
 
 APP_ROOT = File.expand_path("..", __dir__)
-APP_NAME = "aact-backend"
+APP_NAME = "aact"
 
 def system!(*args)
   system(*args, exception: true)
@@ -16,6 +16,9 @@ FileUtils.chdir APP_ROOT do
   puts "== Installing dependencies =="
   system! "gem install bundler --conservative"
   system("bundle check") || system!("bundle install")
+
+  # Install JavaScript dependencies
+  system("yarn install --check-files")
 
   # puts "\n== Copying sample files =="
   # unless File.exist?("config/database.yml")
