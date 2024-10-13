@@ -1,6 +1,6 @@
-class CreateCtgovApiMetadataTable < ActiveRecord::Migration[7.2]
+class CreateCtgovApiMetadata < ActiveRecord::Migration[7.2]
   def change
-    create_table "ctgov_api.metadata" do |t|
+    create_table "ctgov.api_metadata" do |t|
       t.string :version
       t.string :name
       t.string :data_type
@@ -11,7 +11,7 @@ class CreateCtgovApiMetadataTable < ActiveRecord::Migration[7.2]
       t.string :url
       t.string :section
       t.string :module
-      t.string :path,
+      t.string :path
       t.timestamps
     end
   end

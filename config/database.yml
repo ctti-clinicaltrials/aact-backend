@@ -2,7 +2,6 @@ default: &default
   adapter: postgresql
   encoding: unicode
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  timeout: 5000
 
   host: <%= ENV.fetch("DB_HOST") %>
   port: <%= ENV.fetch("DB_PORT") %>
@@ -13,11 +12,6 @@ default: &default
 
 development:
   <<: *default
-  host: localhost
-  port: 5432
-  database: aact
-  search_path: ctgov,ctgov_api,support
-
 
 test:
   <<: *default
