@@ -26,7 +26,7 @@ class MetadataFlattener
     else
       # should be a leaf node
       # TODO: insert all at once?
-      api_field = CtgovApi::Metadata.create(
+      api_field = Ctgov::ApiMetadata.create(
           name: node["name"],
           data_type: node["type"],
           piece: node["piece"],

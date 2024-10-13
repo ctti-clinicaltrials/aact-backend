@@ -10,7 +10,7 @@ class DataMappingService
     deduplicated_mappings = all_mappings.uniq { |entry| [ entry[:table_name], entry[:field_name], entry[:api_path] ] }
 
     # Bulk upsert operation for efficiency
-    CtgovApi::Mapping.upsert_all(deduplicated_mappings, unique_by: [ :table_name, :field_name, :api_path ])
+    Ctgov::AactMapping.upsert_all(deduplicated_mappings, unique_by: [ :table_name, :field_name, :api_path ])
   end
 
 
@@ -30,7 +30,8 @@ class DataMappingService
           table_name: mapping["table"],
           field_name: column["name"],
           api_path: api_path,
-          ctgov_api_metadata_id: fetch_metadata_id(api_path),
+          # TODO: can I use association here?
+          api_metadata_id: fetch_metadata_id(api_path),
           active: true,
           created_at: Time.now,
           updated_at: Time.now
@@ -47,7 +48,7 @@ class DataMappingService
   private
 
   def fetch_metadata_id(api_path)
-    metadata = CtgovApi::Metadata.find_by(path: api_path)
+    metadata = Ctgov::ApiMetadata.find_by(path: api_path)
     metadata&.id
   end
 
