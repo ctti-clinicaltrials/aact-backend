@@ -4,6 +4,12 @@ default: &default
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   timeout: 5000
 
+  host: <%= ENV.fetch("DB_HOST") %>
+  port: <%= ENV.fetch("DB_PORT") %>
+
+  username: <%= ENV["DB_USER"] %>
+  password: <%= ENV["DB_PASSWORD"] %>
+  database: <%= ENV["DB_NAME"] %>
 
 development:
   <<: *default
@@ -12,6 +18,12 @@ development:
   database: aact
   search_path: ctgov,ctgov_api,support
 
+
 test:
   <<: *default
-  database: aact_backend_test
+  database: <%= ENV["DB_NAME"] %>_test
+
+
+production:
+  <<: *default
+  url: <%= ENV["DB_URL="] %>
