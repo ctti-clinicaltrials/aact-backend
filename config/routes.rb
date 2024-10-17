@@ -5,6 +5,10 @@ Rails.application.routes.draw do
     namespace :v1 do
       get "mapping", to: "data_mapping#index"
     end
+
+    namespace :v2 do
+      get "mapping", to: "data_mapping#index"
+    end
   end
 
   # Render dynamic PWA files from app/views/pwa/*
