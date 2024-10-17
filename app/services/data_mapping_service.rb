@@ -3,6 +3,8 @@ class DataMappingService
     @mapping = mapping
   end
 
+  # TODO: add method for fetching combined mapping data
+
   def data_mapping
     # process_mapping(@mapping)
     all_mappings = process_json(@mapping)

@@ -11,5 +11,9 @@ module Ctgov
       optional: true
 
     validates :table_name, :field_name, :api_path, presence: true
+
+    def self.fetch_with_metadata
+      includes(:ctgov_metadata).all
+    end
   end
 end
